@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:math';
 
 void main() {
   runApp(const MaterialApp(home: GamePage()));
@@ -18,15 +19,14 @@ class _GamePageState extends State<GamePage> {
   int player2TrapCount = 0;
   int? trapCard;
   String message = "Player2はトラップカードを選択してください";
-  List<int> availableCards = List.generate(12, (i) => i + 1); // 1〜12のカード
-  bool isPlayer1Turn =      true; // true: プレイヤー1が攻め
-  bool isTrapSettingPhase = true; // true: まだ守り手がトラップを選び中
-  bool gameEnded =          false; //true: ゲーム継続中
+  List<int> availableCards = List.generate(12, (i) => i + 1);
+  bool isPlayer1Turn = true;
+  bool isTrapSettingPhase = true;
+  bool gameEnded = false;
 
   void playTurn(int selectedCard) {
     setState(() {
       if (selectedCard == trapCard) {
-        // トラップヒット！
         if (isPlayer1Turn) {
           player1Score = 0;
           player1TrapCount += 1;
@@ -34,12 +34,10 @@ class _GamePageState extends State<GamePage> {
           player2Score = 0;
           player2TrapCount += 1;
         }
-        
         message = "トラップに引っかかった！ポイント没収...";
       } else {
         if (isPlayer1Turn) {
           player1Score += selectedCard;
-
         } else {
           player2Score += selectedCard;
         }
@@ -83,58 +81,117 @@ class _GamePageState extends State<GamePage> {
     });
   }
 
+  Widget buildCircleBoard() {
+    final double radius = 180;
+    return SizedBox(
+      width: 2 * radius  + 80,
+      height: 2 * radius + 80,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // カード配置
+          for (int i = 0; i < 12; i++)
+            Positioned(
+              left: radius + radius * cos(2 * pi * (i - 2)/ 12) ,
+              top: radius + radius * sin(2 * pi * (i - 2)/ 12) ,
+              child: ElevatedButton(
+                onPressed: gameEnded || !availableCards.contains(i + 1)
+                    ? null
+                    : () {
+                        if (isTrapSettingPhase) {
+                          setState(() {
+                            trapCard = i + 1;
+                            isTrapSettingPhase = false;
+                            message =
+                                "Player ${isPlayer1Turn ? 1 : 2} はカードを選んでください";
+                          });
+                        } else {
+                          playTurn(i + 1);
+                        }
+                      },
+                child: Text('${i + 1}'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: availableCards.contains(i + 1)
+                      ? Colors.blue
+                      : Colors.grey,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(40, 40),
+                  shape: const CircleBorder(),
+                ),
+              ),
+            ),
+
+          // 中央メッセージ
+          Container(
+            padding: const EdgeInsets.all(12),
+            width: 180,
+            decoration: BoxDecoration(
+              color: Colors.yellow[100],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.black)
+            ),
+            child: Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 14),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildScoreBoard() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.black),
+        borderRadius: BorderRadius.circular(12),
+        color: Colors.white,
+      ),
+      child: Column(
+        children: [
+          const Text("スコアボード", style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              Text("Player 1: $player1Score 点"),
+              Text("Trap: $player1TrapCount / 3"),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              Text("Player 2: $player2Score 点"),
+              Text("Trap: $player2TrapCount / 3"),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("12Bluff")),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text("攻め手: ${isPlayer1Turn ? "Player 1" : "Player 2"}", style: TextStyle(fontSize: 20)),
-          const SizedBox(height: 10),
-          Text("Player 1: $player1Score 点"),
-          Text("Player 2: $player2Score 点"),
-          Text("プレイヤー１トラップ回数: $player1TrapCount / 3"),
-          Text("プレイヤー２トラップ回数: $player2TrapCount / 3"),
-          const SizedBox(height: 20),
-
-          Wrap(
-            spacing: 8,
-            children: List.generate(12, (i) {
-            final num = i + 1;
-            final isUsed = !availableCards.contains(num);
-            return ElevatedButton(
-              onPressed: gameEnded || isUsed ? null : () 
-                {
-                  if (isTrapSettingPhase) {
-                    setState(() {
-                      trapCard = num;
-                      isTrapSettingPhase = false;
-                      message = "Player ${isPlayer1Turn ? 1 : 2} はカードを選んでください";
-                    });
-                  } else {
-                    playTurn(num);
-                  }
-                },
-                child: Text(
-                  num.toString(),
-                  style: TextStyle(
-                    color: isUsed ? Colors.grey.shade300 : Colors.black,
-                  ),
-                ),
-              );
-            }),
-          ),
-
-          const SizedBox(height: 20),
-          Text(message, textAlign: TextAlign.center),
-          const SizedBox(height: 20),
-          if (gameEnded)
-            ElevatedButton(
-              onPressed: resetGame,
-              child: const Text("ゲームをリスタート"),
-            )
-        ],
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            buildCircleBoard(),
+            const SizedBox(height: 20),
+            buildScoreBoard(),
+            if (gameEnded)
+              ElevatedButton(
+                onPressed: resetGame,
+                child: const Text("ゲームをリスタート"),
+              ),
+          ],
+        ),
       ),
     );
   }
