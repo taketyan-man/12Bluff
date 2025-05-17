@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:math';
 
 void main() {
   runApp(const MaterialApp(home: GamePage()));
@@ -15,8 +14,8 @@ class GamePage extends StatefulWidget {
 class _GamePageState extends State<GamePage> {
   int player1Score = 0;
   int player2Score = 0;
-  int player1trapCount = 0;
-  int player2trapCount = 0;
+  int player1TrapCount = 0;
+  int player2TrapCount = 0;
   int? trapCard;
   String message = "Player2はトラップカードを選択してください";
   List<int> availableCards = List.generate(12, (i) => i + 1); // 1〜12のカード
@@ -30,10 +29,10 @@ class _GamePageState extends State<GamePage> {
         // トラップヒット！
         if (isPlayer1Turn) {
           player1Score = 0;
-          player1trapCount += 1;
+          player1TrapCount += 1;
         } else {
           player2Score = 0;
-          player2trapCount += 1;
+          player2TrapCount += 1;
         }
         
         message = "トラップに引っかかった！ポイント没収...";
@@ -48,8 +47,18 @@ class _GamePageState extends State<GamePage> {
         message = "$selectedCardポイント獲得！";
       }
 
-      if (player1Score >= 40 || player2Score >= 40 || player1trapCount >= 3 || player2trapCount >= 3) {
-        message += "\nゲーム終了";
+      if (player1Score >= 40 || player2Score >= 40 || player1TrapCount >= 3 || player2TrapCount >= 3 || availableCards.length == 1) {
+        if (player1TrapCount >= 3) {
+          message += "\nPlayer 2 の勝ち！";
+        } else if (player2TrapCount >= 3) {
+          message += "\nPlayer 1 の勝ち！";
+        } else if (player1Score > player2Score) {
+          message += "\nPlayer 1 の勝ち！";
+        } else if (player2Score > player1Score) {
+          message += "\nPlayer 2 の勝ち！";
+        } else {
+          message += "\n引き分け！";
+        }
         gameEnded = true;
       } else {
         isPlayer1Turn = !isPlayer1Turn;
@@ -63,8 +72,8 @@ class _GamePageState extends State<GamePage> {
     setState(() {
       player1Score = 0;
       player2Score = 0;
-      player1trapCount = 0;
-      player2trapCount = 0;
+      player1TrapCount = 0;
+      player2TrapCount = 0;
       trapCard = null;
       isPlayer1Turn = true;
       isTrapSettingPhase = true;
@@ -85,8 +94,8 @@ class _GamePageState extends State<GamePage> {
           const SizedBox(height: 10),
           Text("Player 1: $player1Score 点"),
           Text("Player 2: $player2Score 点"),
-          Text("プレイヤー１トラップ回数: $player1trapCount / 3"),
-          Text("プレイヤー２トラップ回数: $player2trapCount / 3"),
+          Text("プレイヤー１トラップ回数: $player1TrapCount / 3"),
+          Text("プレイヤー２トラップ回数: $player2TrapCount / 3"),
           const SizedBox(height: 20),
 
           Wrap(
@@ -110,7 +119,7 @@ class _GamePageState extends State<GamePage> {
                 child: Text(
                   num.toString(),
                   style: TextStyle(
-                    color: isUsed ? Colors.grey.shade300 : null,
+                    color: isUsed ? Colors.grey.shade300 : Colors.black,
                   ),
                 ),
               );
