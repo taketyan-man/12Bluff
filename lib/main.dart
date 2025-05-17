@@ -19,9 +19,10 @@ class _GamePageState extends State<GamePage> {
   int player2trapCount = 0;
   int? trapCard;
   String message = "Player2はトラップカードを選択してください";
-  List<int> usedCards = [];
+  List<int> availableCards = List.generate(12, (i) => i + 1); // 1〜12のカード
   bool isPlayer1Turn =      true; // true: プレイヤー1が攻め
   bool isTrapSettingPhase = true; // true: まだ守り手がトラップを選び中
+  bool gameEnded =          false; //true: ゲーム継続中
 
   void playTurn(int selectedCard) {
     setState(() {
@@ -43,17 +44,33 @@ class _GamePageState extends State<GamePage> {
         } else {
           player2Score += selectedCard;
         }
-        usedCards.add(selectedCard);
+        availableCards.remove(selectedCard);
         message = "$selectedCardポイント獲得！";
       }
 
       if (player1Score >= 40 || player2Score >= 40 || player1trapCount >= 3 || player2trapCount >= 3) {
         message += "\nゲーム終了";
+        gameEnded = true;
       } else {
         isPlayer1Turn = !isPlayer1Turn;
+        message = "Player ${!isPlayer1Turn ? 1 : 2} はトラップカードを選んでください";
+        isTrapSettingPhase = true;
       }
-      message = "Player ${!isPlayer1Turn ? 1 : 2} はトラップカードを選んでください";
+    });
+  }
+
+  void resetGame() {
+    setState(() {
+      player1Score = 0;
+      player2Score = 0;
+      player1trapCount = 0;
+      player2trapCount = 0;
+      trapCard = null;
+      isPlayer1Turn = true;
       isTrapSettingPhase = true;
+      gameEnded = false;
+      availableCards = List.generate(12, (i) => i + 1);
+      message = "Player2 はトラップカードを選択してください";
     });
   }
 
@@ -75,25 +92,39 @@ class _GamePageState extends State<GamePage> {
           Wrap(
             spacing: 8,
             children: List.generate(12, (i) {
-              final num = i + 1;
-              return ElevatedButton(
-                onPressed: () {
+            final num = i + 1;
+            final isUsed = !availableCards.contains(num);
+            return ElevatedButton(
+              onPressed: gameEnded || isUsed ? null : () 
+                {
                   if (isTrapSettingPhase) {
-                    setState( () {
+                    setState(() {
                       trapCard = num;
                       isTrapSettingPhase = false;
-                      message = "Player ${isPlayer1Turn ? 1 : 2}はカードを選んでください";
+                      message = "Player ${isPlayer1Turn ? 1 : 2} はカードを選んでください";
                     });
                   } else {
                     playTurn(num);
                   }
                 },
-                child: Text(num.toString()),
+                child: Text(
+                  num.toString(),
+                  style: TextStyle(
+                    color: isUsed ? Colors.grey.shade300 : null,
+                  ),
+                ),
               );
             }),
           ),
+
           const SizedBox(height: 20),
           Text(message, textAlign: TextAlign.center),
+          const SizedBox(height: 20),
+          if (gameEnded)
+            ElevatedButton(
+              onPressed: resetGame,
+              child: const Text("ゲームをリスタート"),
+            )
         ],
       ),
     );
