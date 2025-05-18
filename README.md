@@ -7,7 +7,7 @@ Flutter製のWebブラウザで遊べる心理戦ゲームです。
 
 ##  デモページ
 
-👉 [GitHub Pagesでプレイ](https://yourusername.github.io/your-repo-name)
+[GitHub Pagesでプレイ](https://taketyan-man.github.io/12Bluff/)
 
 ---
 
