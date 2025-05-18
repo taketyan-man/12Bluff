@@ -1,17 +1,30 @@
-# twelve_bluff
+# 🎮 12Bluff - 心理戦カードゲーム
 
-A new Flutter project.
+Flutter製のWebブラウザで遊べる心理戦ゲームです。  
+攻守交代制で12枚のカードを取り合い、先に40点を獲得するか、相手にトラップを3回踏ませれば勝利！
 
-## Getting Started
+![screenshot](flutter_02.png) 
 
-This project is a starting point for a Flutter application.
+## 🔗 デモページ
 
-A few resources to get you started if this is your first Flutter project:
+👉 [GitHub Pagesでプレイ](https://yourusername.github.io/your-repo-name)
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+---
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
-# 12Bluff
+## 🎯 ルール概要
+
+- 1〜12のカードから交互にカードを選び合います
+- 毎ターン、守り手は1枚だけ「トラップカード」を仕込みます
+- 攻め手がトラップを選ぶとスコアが0にリセット、かつトラップ回数が1加算されます
+- トラップを3回踏む、もしくは40点以上獲得、またはカードが残り1枚になったら終了
+
+---
+
+## 🛠️ 使用技術
+
+- Flutter 3.29.3
+- Dart 3.7.2
+- GitHub Pages（Webデプロイ）
+
+---
+
