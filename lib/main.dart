@@ -83,52 +83,59 @@ class _GamePageState extends State<GamePage> {
 
   Widget buildCircleBoard() {
     final double radius = 180;
+    final double buttonSize = 40;
+
     return SizedBox(
-      width: 2 * radius  + 80,
-      height: 2 * radius + 80,
+      width: 2 * radius + buttonSize + 40,  // 少し余裕を持たせる
+      height: 2 * radius + buttonSize + 40,
       child: Stack(
         alignment: Alignment.center,
         children: [
           // カード配置
-          for (int i = 0; i < 12; i++)
+          for (int i = 0; i < 12; i++) ...[
             Positioned(
-              left: radius + radius * cos(2 * pi * (i - 2)/ 12) ,
-              top: radius + radius * sin(2 * pi * (i - 2)/ 12) ,
-              child: ElevatedButton(
-                onPressed: gameEnded || !availableCards.contains(i + 1)
-                    ? null
-                    : () {
-                        if (isTrapSettingPhase) {
-                          setState(() {
-                            trapCard = i + 1;
-                            isTrapSettingPhase = false;
-                            message =
-                                "Player ${isPlayer1Turn ? 1 : 2} はカードを選んでください";
-                          });
-                        } else {
-                          playTurn(i + 1);
-                        }
-                      },
-                child: Text('${i + 1}'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: availableCards.contains(i + 1)
-                      ? Colors.blue
-                      : Colors.grey,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(40, 40),
-                  shape: const CircleBorder(),
+              left: radius * cos((2 * pi * i / 12) - pi / 3) + (radius + buttonSize / 2) - (buttonSize / 3),
+              top: radius * sin((2 * pi * i / 12) - pi / 3) + (radius + buttonSize / 2),
+              child: SizedBox(
+                width: buttonSize,
+                height: buttonSize,
+                child: ElevatedButton(
+                  onPressed: gameEnded || !availableCards.contains(i + 1)
+                      ? null
+                      : () {
+                          if (isTrapSettingPhase) {
+                            setState(() {
+                              trapCard = i + 1;
+                              isTrapSettingPhase = false;
+                              message =
+                                  "Player ${isPlayer1Turn ? 1 : 2} はカードを選んでください";
+                            });
+                          } else {
+                            playTurn(i + 1);
+                          }
+                        },
+                  child: Text('${i + 1}'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: availableCards.contains(i + 1)
+                    ? Colors.blue
+                    : Colors.grey,
+                    foregroundColor: Colors.white,
+                    shape: const CircleBorder(),
+                    padding: EdgeInsets.zero, // サイズ調整
+                  ),
                 ),
               ),
             ),
+          ],
 
-          // 中央メッセージ
+      // 中央メッセージ
           Container(
             padding: const EdgeInsets.all(12),
             width: 180,
             decoration: BoxDecoration(
               color: Colors.yellow[100],
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.black)
+              border: Border.all(color: Colors.black),
             ),
             child: Text(
               message,
