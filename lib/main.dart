@@ -82,71 +82,85 @@ class _GamePageState extends State<GamePage> {
   }
 
   Widget buildCircleBoard() {
-    final double radius = 180;
     final double buttonSize = 40;
+    final double maxSize = 480;
 
-    return SizedBox(
-      width: 2 * radius + buttonSize + 40,  // 少し余裕を持たせる
-      height: 2 * radius + buttonSize + 40,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // カード配置
-          for (int i = 0; i < 12; i++) ...[
-            Positioned(
-              left: radius * cos((2 * pi * i / 12) - pi / 3) + (radius + buttonSize / 2) - (buttonSize / 3),
-              top: radius * sin((2 * pi * i / 12) - pi / 3) + (radius + buttonSize / 2),
-              child: SizedBox(
-                width: buttonSize,
-                height: buttonSize,
-                child: ElevatedButton(
-                  onPressed: gameEnded || !availableCards.contains(i + 1)
-                      ? null
-                      : () {
-                          if (isTrapSettingPhase) {
-                            setState(() {
-                              trapCard = i + 1;
-                              isTrapSettingPhase = false;
-                              message =
-                                  "Player ${isPlayer1Turn ? 1 : 2} はカードを選んでください";
-                            });
-                          } else {
-                            playTurn(i + 1);
-                          }
-                        },
-                  child: Text('${i + 1}'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: availableCards.contains(i + 1)
-                    ? Colors.blue
-                    : Colors.grey,
-                    foregroundColor: Colors.white,
-                    shape: const CircleBorder(),
-                    padding: EdgeInsets.zero, // サイズ調整
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double screenSize = min(constraints.maxWidth, constraints.maxHeight);
+        final double size = min(screenSize, maxSize); 
+        final double radius = size / 2 - buttonSize;
+
+        return SizedBox(
+          width: size,
+          height: size,
+          child: Stack(
+            children: [
+              // --- カード配置 ---
+              ...List.generate(12, (i) {
+                final angle = (2 * pi * i / 12) - pi / 3;
+                final centerX = size / 2;
+                final centerY = size / 2;
+                final x = centerX + radius * cos(angle) - buttonSize / 2;
+                final y = centerY + radius * sin(angle) - buttonSize / 2;
+
+                return Positioned(
+                  left: x,
+                  top: y,
+                  child: SizedBox(
+                    width: buttonSize,
+                    height: buttonSize,
+                    child: ElevatedButton(
+                      onPressed: gameEnded || !availableCards.contains(i + 1)
+                          ? null
+                          : () {
+                              if (isTrapSettingPhase) {
+                                setState(() {
+                                  trapCard = i + 1;
+                                  isTrapSettingPhase = false;
+                                  message = "Player ${isPlayer1Turn ? 1 : 2} はカードを選んでください";
+                                });
+                              } else {
+                                playTurn(i + 1);
+                              }
+                            },
+                      style: ElevatedButton.styleFrom(
+                        shape: const CircleBorder(),
+                        padding: EdgeInsets.zero,
+                        backgroundColor: availableCards.contains(i + 1) ? Colors.blue : Colors.grey,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: Text('${i + 1}'),
+                    ),
+                  ),
+                );
+              }),
+
+              // --- 中央メッセージ ---
+              Align(
+                alignment: Alignment.center,
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  width: 180,
+                  decoration: BoxDecoration(
+                    color: Colors.yellow[100],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.black),
+                  ),
+                  child: Text(
+                    message,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 14),
                   ),
                 ),
               ),
-            ),
-          ],
-
-      // 中央メッセージ
-          Container(
-            padding: const EdgeInsets.all(12),
-            width: 180,
-            decoration: BoxDecoration(
-              color: Colors.yellow[100],
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.black),
-            ),
-            child: Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 14),
-            ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
+
 
   Widget buildScoreBoard() {
     return Container(
