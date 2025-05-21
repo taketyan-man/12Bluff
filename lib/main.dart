@@ -67,10 +67,71 @@ class _GamePageState extends State<GamePage> {
         gameEnded = true;
       } else {
         isPlayer1Turn = !isPlayer1Turn;
-        message = "Player ${!isPlayer1Turn ? 1 : 2} はトラップカードを選んでください";
+        message = "Player ${!isPlayer1Turn ? 1 : 2} : はトラップカードを選んでください";
         isTrapSettingPhase = true;
       }
     });
+  }
+
+  void _showConfirmation(int selectedCard,
+  BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
+          titlePadding: const EdgeInsets.only(top: 8, right: 8),
+          title: Align(
+            alignment: Alignment.topRight,
+            child: IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ),
+          contentPadding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+          content: SizedBox(
+            width: 300, // ボックスの幅を拡大
+            height: 150, // 高さも調整
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  isTrapSettingPhase
+                      ? 'Player ${isPlayer1Turn ? 2 : 1} : $selectedCard にトラップをしかけてよろしいですか？'
+                      : 'Player ${isPlayer1Turn ? 1 : 2 } : $selectedCardでよろしいですか？',
+                  style: const TextStyle(fontSize: 16),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    if (isTrapSettingPhase) {
+                      setState(() {
+                        trapCard = selectedCard;
+                        isTrapSettingPhase = false;
+                        message = "Player ${isPlayer1Turn ? 1 : 2} : はカードを選んでください";
+                      });
+                    } else {
+                      playTurn(selectedCard);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    textStyle: const TextStyle(fontSize: 14),
+                  ),
+                  child: const Text('確認'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   void resetGame() {
@@ -121,15 +182,10 @@ class _GamePageState extends State<GamePage> {
                       onPressed: gameEnded || !availableCards.contains(i + 1)
                           ? null
                           : () {
-                              if (isTrapSettingPhase) {
-                                setState(() {
-                                  trapCard = i + 1;
-                                  isTrapSettingPhase = false;
-                                  message = "Player ${isPlayer1Turn ? 1 : 2} はカードを選んでください";
-                                });
-                              } else {
-                                playTurn(i + 1);
-                              }
+                              _showConfirmation(
+                                i + 1,
+                                context,
+                              );
                             },
                       style: ElevatedButton.styleFrom(
                         shape: const CircleBorder(),
@@ -207,7 +263,6 @@ class _GamePageState extends State<GamePage> {
     const int totalTurns = 9;
     const double nameRatio = 0.2;
     const double cellRatio = 0.8 / 10; // 9 turns + 1 total
- // ← 任意のスコアをここで定義
 
     List<Widget> buildRow({
       required String playerName,
