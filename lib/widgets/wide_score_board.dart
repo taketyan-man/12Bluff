@@ -4,33 +4,86 @@ import '../models/game_state.dart';
 class WideScoreBoard extends StatelessWidget {
   final GameState gameState;
 
-  const WideScoreBoard({Key? key, required this.gameState}) : super(key: key);
+  const WideScoreBoard({super.key, required this.gameState});
 
-  Widget _buildPlayer(String title, List<String> values, int score, int traps) {
-    return Expanded(
-      child: Column(
-        children: [
-          Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-          Wrap(
-            spacing: 4,
-            runSpacing: 4,
-            children: values.map((v) => Chip(label: Text(v))).toList(),
-          ),
-          Text("スコア: $score ❌: $traps"),
-        ],
-      ),
-    );
-  }
+  static const int totalTurns = 9;
+  static const double cellHeight = 30;
+  static const double nameRatio = 0.2;
+  static const double cellRatio = 0.8 / 10;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _buildPlayer("Player 1", gameState.player1Row, gameState.player1Score, gameState.player1TrapCount),
-        const SizedBox(width: 32),
-        _buildPlayer("Player 2", gameState.player2Row, gameState.player2Score, gameState.player2TrapCount),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final totalWidth = constraints.maxWidth * 0.95;
+
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: _buildRow(
+                playerName: "Player 1",
+                scores: gameState.player1Row,
+                totalScore: gameState.player1Score,
+                totalWidth: totalWidth,
+              ),
+            ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: _buildRow(
+                playerName: "Player 2",
+                scores: gameState.player2Row,
+                totalScore: gameState.player2Score,
+                totalWidth: totalWidth,
+              ),
+            ),
+          ],
+        );
+      },
     );
+  }
+
+  List<Widget> _buildRow({
+    required String playerName,
+    required List<String> scores,
+    required int totalScore,
+    required double totalWidth,
+  }) {
+    List<String> fixedScores = List<String>.filled(totalTurns, '', growable: true);
+    for (int i = 0; i < scores.length && i < totalTurns; i++) {
+      fixedScores[i] = scores[i];
+    }
+    fixedScores.add(totalScore.toString());
+
+    List<String> rowContents = [playerName] + fixedScores;
+
+    return rowContents.asMap().entries.map((entry) {
+      final index = entry.key;
+      final text = entry.value;
+      final isName = index == 0;
+      final isLast = index == rowContents.length - 1;
+
+      final width = isName
+          ? totalWidth * nameRatio
+          : totalWidth * cellRatio;
+
+      return Container(
+        width: width,
+        height: cellHeight,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: isLast ? Colors.yellow[200] : Colors.white,
+          border: Border.all(color: Colors.black),
+        ),
+        child: Text(
+          text,
+          style: TextStyle(
+            fontWeight: isName ? FontWeight.bold : FontWeight.normal,
+            color: text == '❌' ? Colors.red : Colors.black,
+          ),
+        ),
+      );
+    }).toList();
   }
 }

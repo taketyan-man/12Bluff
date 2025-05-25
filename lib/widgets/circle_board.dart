@@ -14,44 +14,74 @@ class CircleBoard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cardCount = 12;
-    final double radius = 120;
+    final double buttonSize = 40;
+    final double maxSize = 480;
 
-    return SizedBox(
-      width: 300,
-      height: 300,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          for (int i = 0; i < cardCount; i++)
-            if (!gameState.usedCards.contains(i + 1))
-              Positioned(
-                left: 150 + radius * cos(i * 2 * pi / cardCount),
-                top: 150 + radius * sin(i * 2 * pi / cardCount),
-                child: ElevatedButton(
-                  onPressed: () => onCardSelected(i + 1),
-                  style: ElevatedButton.styleFrom(
-                    shape: const CircleBorder(),
-                    padding: const EdgeInsets.all(16),
-                    backgroundColor: Colors.blue,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double screenSize = min(constraints.maxWidth, constraints.maxHeight);
+        final double size = min(screenSize, maxSize);
+        final double radius = size / 2 - buttonSize;
+
+        return SizedBox(
+          width: size,
+          height: size,
+          child: Stack(
+            children: [
+              // --- カード配置 ---
+              ...List.generate(12, (i) {
+                final angle = (2 * pi * i / 12) - pi / 3;
+                final centerX = size / 2;
+                final centerY = size / 2;
+                final x = centerX + radius * cos(angle) - buttonSize / 2;
+                final y = centerY + radius * sin(angle) - buttonSize / 2;
+                final cardNumber = i + 1;
+                final isUsed = !gameState.availableCards.contains(cardNumber);
+
+                return Positioned(
+                  left: x,
+                  top: y,
+                  child: SizedBox(
+                    width: buttonSize,
+                    height: buttonSize,
+                    child: ElevatedButton(
+                      onPressed: gameState.gameEnded || isUsed
+                          ? null
+                          : () => onCardSelected(cardNumber),
+                      style: ElevatedButton.styleFrom(
+                        shape: const CircleBorder(),
+                        padding: EdgeInsets.zero,
+                        backgroundColor: isUsed ? Colors.grey : Colors.blue,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: Text('$cardNumber'),
+                    ),
+                  ),
+                );
+              }),
+
+              // --- 中央メッセージ ---
+              Align(
+                alignment: Alignment.center,
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  width: 180,
+                  decoration: BoxDecoration(
+                    color: Colors.yellow[100],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.black),
                   ),
                   child: Text(
-                    '${i + 1}',
-                    style: const TextStyle(color: Colors.white),
+                    gameState.message,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 14),
                   ),
                 ),
               ),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(color: Colors.blue),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(gameState.message),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
